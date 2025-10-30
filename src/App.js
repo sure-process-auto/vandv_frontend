@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import EvaluationPage from './components/EvaluationPage.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
-import Login from './pages/login.jsx';
+import Login from './pages/LoginPage.jsx';
 
 function App() {
   return (
