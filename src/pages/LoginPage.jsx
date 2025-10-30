@@ -83,9 +83,6 @@ const LoginPage = () => {
 								objectFit: 'contain'
 							}}
 						/>
-						<Typography component="h1" variant="h5" sx={{ mb: 2 }}>
-							로그인
-						</Typography>
 						<Box component="form" onSubmit={handleLogin} sx={{ mt: 1, width: '100%' }}>
 							{loginError && (
 								<Alert severity="error" sx={{ mb: 2 }}>

@@ -28,7 +28,7 @@ import {
   Save as SaveIcon,
   FolderOpen as FolderOpenIcon,
 } from '@mui/icons-material';
-import { saveEvaluation, getAllTeamMembers, getRatingItems, getMemberRatings, saveUserRatings } from '../services/evaluationService';
+import { getAllTeamMembers, getRatingItems, getMemberRatings, saveUserRatings } from '../services/evaluationService';
 
 // 더미 프로젝트 데이터
 const DUMMY_PROJECTS = [
