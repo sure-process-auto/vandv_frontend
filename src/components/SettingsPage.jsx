@@ -26,6 +26,7 @@ import {
   Save as SaveIcon,
 } from '@mui/icons-material';
 import { useProject } from '../contexts/ProjectContext.jsx';
+import { getRatingItems } from '../services/evaluationService';
 
 function SettingsPage() {
   const { projects, currentProjectId, currentProject, selectProject } = useProject();
@@ -46,19 +47,45 @@ function SettingsPage() {
   useEffect(() => {
     if (!currentProjectId) return;
     
-    const savedSettings = localStorage.getItem(`evaluationSettings-${currentProjectId}`);
-    if (savedSettings) {
-      setEvaluationItems(JSON.parse(savedSettings));
-    } else {
-      // 기본 항목
-      setEvaluationItems([
-        { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-        { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-        { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-        { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-        { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-      ]);
-    }
+    const loadRatings = async () => {
+      try {
+        // API에서 평가 항목 가져오기
+        const ratingsData = await getRatingItems();
+        
+        if (ratingsData && ratingsData.length > 0) {
+          // API 데이터를 항목 형태로 변환 (id, name, ratio)
+          const formattedItems = ratingsData.map((item) => ({
+            id: item.id, // API에서 받은 실제 ID 사용 (중요!)
+            name: item.name,
+            ratio: parseFloat(item.ratio) || 0,
+            description: item.description || '' // description이 있으면 사용
+          }));
+          
+          console.log('✅ API에서 불러온 평가 항목 (실제 ID 포함):', formattedItems);
+          setEvaluationItems(formattedItems);
+          return;
+        }
+      } catch (error) {
+        console.error('평가 항목 로드 실패, localStorage에서 시도:', error);
+      }
+      
+      // API 실패 시 localStorage에서 로드
+      const savedSettings = localStorage.getItem(`evaluationSettings-${currentProjectId}`);
+      if (savedSettings) {
+        setEvaluationItems(JSON.parse(savedSettings));
+      } else {
+        // 기본 항목
+        setEvaluationItems([
+          { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
+          { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
+          { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
+          { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
+          { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
+        ]);
+      }
+    };
+    
+    loadRatings();
   }, [currentProjectId]);
 
   // 모달 열기/닫기
