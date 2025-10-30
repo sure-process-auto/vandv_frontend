@@ -1,4 +1,82 @@
-# Getting Started with Create React App
+# 평가 시스템 (V&V Frontend)
+
+평가 항목에 비율, 점수, 가산점을 입력하여 종합 평가를 수행하는 웹 애플리케이션입니다.
+
+## 주요 기능
+
+- ✅ **평가 항목 관리**: 5개의 데모 평가 항목 (코드 품질, 기능 완성도, 사용자 경험, 성능 최적화, 문서화)
+- 📊 **실시간 점수 계산**: 비율에 따른 가중 점수 자동 계산
+- 💾 **데이터 저장**: 백엔드 API를 통한 평가 데이터 저장
+- 🎨 **모던 UI**: 그라디언트 디자인과 반응형 레이아웃
+- ✔️ **유효성 검증**: 비율 합계 100% 자동 검증
+
+## 프로젝트 구조
+
+```
+src/
+├── components/
+│   ├── EvaluationPage.js      # 평가 페이지 메인 컴포넌트
+│   └── EvaluationPage.css      # 평가 페이지 스타일
+├── services/
+│   └── evaluationService.js    # API 통신 서비스
+├── App.js                       # 메인 앱 컴포넌트
+├── App.css                      # 앱 기본 스타일
+└── index.js                     # 앱 진입점
+```
+
+## 시작하기
+
+### 사전 요구사항
+
+- Node.js (v14 이상)
+- npm 또는 yarn
+
+### 설치
+
+```bash
+npm install
+```
+
+### 개발 서버 실행
+
+```bash
+npm start
+```
+
+앱이 개발 모드로 실행됩니다.
+브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인할 수 있습니다.
+
+### 백엔드 API 설정
+
+`.env` 파일을 프로젝트 루트에 생성하고 백엔드 API URL을 설정하세요:
+
+```env
+REACT_APP_API_URL=http://localhost:8080/api
+```
+
+백엔드 API 명세는 [API_SPEC.md](./API_SPEC.md)를 참조하세요.
+
+## 사용 방법
+
+1. **비율 설정**: 각 항목의 평가 비율을 입력합니다 (합계 100%)
+2. **점수 입력**: 각 항목의 점수를 0-100 사이로 입력합니다
+3. **가산점 입력**: 필요시 가산점을 입력합니다
+4. **저장**: '평가 저장' 버튼을 클릭하여 백엔드에 저장합니다
+
+### 점수 계산 방식
+
+```
+가중 점수 = (점수 × 비율 / 100) + 가산점
+총점 = 모든 항목의 가중 점수 합계
+```
+
+## 기술 스택
+
+- **React 19.2.0**: UI 라이브러리
+- **Fetch API**: HTTP 통신
+- **CSS3**: 스타일링 (그라디언트, 애니메이션)
+
+---
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
