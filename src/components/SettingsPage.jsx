@@ -30,8 +30,8 @@ import {
 } from '@mui/icons-material';
 import { getRatingItems, saveRatingItems, getPmId } from '../services/evaluationService';
 
-// 더미 프로젝트 데이터
-const DUMMY_PROJECTS = [
+// PM1 프로젝트 데이터 (PM_ID: 4g9b2e7f1c8a0d6h3k5j)
+const PM1_PROJECTS = [
   {
     id: 'project-001',
     name: '모바일 앱 리뉴얼',
@@ -64,8 +64,52 @@ const DUMMY_PROJECTS = [
   }
 ];
 
+// PM2 프로젝트 데이터 (PM_ID: e9k2f0b7d5c1h3a6g8j)
+const PM2_PROJECTS = [
+  {
+    id: 'project-101',
+    name: '블록체인 결제 시스템',
+    description: '암호화폐 기반 안전한 결제 플랫폼 개발',
+    createdAt: '2025-01-20T09:00:00.000Z'
+  },
+  {
+    id: 'project-102',
+    name: 'IoT 스마트홈 통합',
+    description: '스마트홈 기기 통합 관리 시스템 구축',
+    createdAt: '2025-02-10T09:00:00.000Z'
+  },
+  {
+    id: 'project-103',
+    name: '온라인 교육 플랫폼',
+    description: '실시간 화상 강의 및 학습 관리 시스템',
+    createdAt: '2025-03-05T09:00:00.000Z'
+  },
+  {
+    id: 'project-104',
+    name: '헬스케어 모니터링',
+    description: '웨어러블 기기 연동 건강 관리 앱',
+    createdAt: '2025-04-15T09:00:00.000Z'
+  },
+  {
+    id: 'project-105',
+    name: '물류 추적 시스템',
+    description: '실시간 배송 추적 및 최적 경로 제공',
+    createdAt: '2025-05-25T09:00:00.000Z'
+  }
+];
+
+// PM_ID에 따라 프로젝트 리스트 반환
+const getProjectsByPmId = () => {
+  const pmId = localStorage.getItem('PM_ID') || '4g9b2e7f1c8a0d6h3k5j';
+  if (pmId === 'e9k2f0b7d5c1h3a6g8j') {
+    return PM2_PROJECTS;
+  }
+  return PM1_PROJECTS;
+};
+
 function SettingsPage() {
-  const [currentProjectId, setCurrentProjectId] = useState(DUMMY_PROJECTS[0].id);
+  const projects = getProjectsByPmId();
+  const [currentProjectId, setCurrentProjectId] = useState(projects[0].id);
   
   // 평가 항목 상태
   const [evaluationItems, setEvaluationItems] = useState([]);
@@ -82,7 +126,7 @@ function SettingsPage() {
   });
   
   // 현재 프로젝트 정보
-  const currentProject = DUMMY_PROJECTS.find(p => p.id === currentProjectId);
+  const currentProject = projects.find(p => p.id === currentProjectId);
   
   // Snackbar 핸들러
   const showSnackbar = (message, severity = 'success') => {
@@ -277,7 +321,7 @@ function SettingsPage() {
                 onChange={(e) => setCurrentProjectId(e.target.value)}
                 displayEmpty
               >
-                {DUMMY_PROJECTS.map((project) => (
+                {projects.map((project) => (
                   <MenuItem key={project.id} value={project.id}>
                     {project.name}
                   </MenuItem>
