@@ -1,17 +1,22 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Box, TextField, Button, Typography, Paper } from '@mui/material';
 
 const LoginPage = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
+	const navigate = useNavigate();
+	const PW = 'suresoft';
 
 	const handleLogin = (e) => {
 		e.preventDefault();
 		// 로그인 처리 로직 (예시)
-		if (username === 'pm' && password === 'pm') {
+		if (username === 'pm' && password === PW) {
 			alert('PM 로그인 성공!');
-		} else if (username === 'user' || password === 'user') {
+			navigate('/');
+		} else if (username === 'user' || password === PW) {
 			alert('사용자 로그인 성공!');
+			navigate('/');
 		} else {
 			alert('로그인 실패!');
 		}
