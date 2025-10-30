@@ -27,11 +27,44 @@ import {
   Save as SaveIcon,
   FolderOpen as FolderOpenIcon,
 } from '@mui/icons-material';
-import { saveEvaluation, getAllTeamMembers, getRatingItems, getMemberRatings } from '../services/evaluationService';
-import { useProject } from '../contexts/ProjectContext.jsx';
+import { saveEvaluation, getAllTeamMembers, getRatingItems, getMemberRatings, saveUserRatings } from '../services/evaluationService';
+
+// 더미 프로젝트 데이터
+const DUMMY_PROJECTS = [
+  {
+    id: 'project-001',
+    name: '모바일 앱 리뉴얼',
+    description: 'iOS/Android 모바일 앱 UI/UX 개선 프로젝트',
+    createdAt: '2025-01-15T09:00:00.000Z'
+  },
+  {
+    id: 'project-002',
+    name: 'ERP 시스템 구축',
+    description: '사내 전사적 자원 관리 시스템 개발',
+    createdAt: '2025-02-01T09:00:00.000Z'
+  },
+  {
+    id: 'project-003',
+    name: 'AI 챗봇 서비스',
+    description: '고객 상담 자동화를 위한 AI 챗봇 구현',
+    createdAt: '2025-03-10T09:00:00.000Z'
+  },
+  {
+    id: 'project-004',
+    name: '데이터 분석 플랫폼',
+    description: '빅데이터 수집 및 분석 대시보드 구축',
+    createdAt: '2025-04-05T09:00:00.000Z'
+  },
+  {
+    id: 'project-005',
+    name: '클라우드 마이그레이션',
+    description: '온프레미스에서 AWS 클라우드 전환 프로젝트',
+    createdAt: '2025-05-20T09:00:00.000Z'
+  }
+];
 
 function EvaluationPage() {
-  const { currentProject, currentProjectId, projects, selectProject } = useProject();
+  const [currentProjectId, setCurrentProjectId] = useState(DUMMY_PROJECTS[0].id);
   const [evaluationItems, setEvaluationItems] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
@@ -48,37 +81,14 @@ function EvaluationPage() {
     const loadInitialData = async () => {
       // 1. 구성원 데이터 로드
       try {
-        console.log('📞 getAllTeamMembers API 호출 중...');
         const teamMembers = await getAllTeamMembers();
-        console.log('📥 getAllTeamMembers API 응답:', teamMembers);
         
         if (teamMembers && teamMembers.length > 0) {
-          // List<Map<String,String>> 형태를 배열로 변환
-          console.log('✅ 구성원 데이터 설정 완료. 첫 번째 구성원:', teamMembers[0]);
-          console.log('✅ 구성원 ID 필드들:', teamMembers.map(m => ({ id: m.id, username: m.username })));
           setMembers(teamMembers);
-        } else {
-          console.warn('⚠️ API 응답이 비어있음. fallback 데이터 사용');
-          // API 실패 시 fallback 데이터
-          setMembers([
-            { id: 'member-1', username: '김철수', team: '백엔드팀' },
-            { id: 'member-2', username: '이영희', team: '프론트엔드팀' },
-            { id: 'member-3', username: '박지훈', team: '풀스택팀' },
-            { id: 'member-4', username: '최민수', team: 'DevOps팀' },
-            { id: 'member-5', username: '정수진', team: 'UI/UX팀' },
-          ]);
         }
       } catch (error) {
-        console.error('❌ 구성원 로드 실패:', error);
-        console.warn('⚠️ fallback 데이터 사용');
-        // 에러 시 fallback 데이터
-        setMembers([
-          { id: 'member-1', username: '김철수', team: '백엔드팀' },
-          { id: 'member-2', username: '이영희', team: '프론트엔드팀' },
-          { id: 'member-3', username: '박지훈', team: '풀스택팀' },
-          { id: 'member-4', username: '최민수', team: 'DevOps팀' },
-          { id: 'member-5', username: '정수진', team: 'UI/UX팀' },
-        ]);
+        // 에러 시 빈 배열
+        setMembers([]);
       }
       
       // 2. 평가 항목 데이터 로드
@@ -88,39 +98,25 @@ function EvaluationPage() {
         if (ratingsData && ratingsData.length > 0) {
           // API 데이터를 항목 형태로 변환 (id, name, ratio)
           const formattedItems = ratingsData.map((item) => ({
-            id: item.id, // API에서 받은 실제 ID 사용 (중요!)
+            id: item.id,
             name: item.name,
             ratio: parseFloat(item.ratio) || 0,
-            description: item.description || '' // description이 있으면 사용
+            description: item.description || ''
           }));
           
-          console.log('✅ API에서 불러온 평가 항목 템플릿 (실제 ID 포함):', formattedItems);
           setRatingsTemplate(formattedItems);
-        } else {
-          // API 응답이 없으면 기본 항목
-          setRatingsTemplate([
-            { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-            { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-            { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-            { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-            { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-          ]);
         }
       } catch (error) {
-        console.error('평가 항목 로드 실패:', error);
-        // 에러 시 기본 항목
-        setRatingsTemplate([
-          { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-          { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-          { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-          { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-          { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-        ]);
+        // 에러 시 빈 배열
+        setRatingsTemplate([]);
       }
     };
 
     loadInitialData();
   }, []);
+
+  // 현재 프로젝트 정보
+  const currentProject = DUMMY_PROJECTS.find(p => p.id === currentProjectId);
 
   // 프로젝트 변경 시 구성원 선택 초기화
   useEffect(() => {
@@ -141,37 +137,16 @@ function EvaluationPage() {
 
     const loadMemberEvaluationData = async () => {
       try {
-        // API에서 구성원의 평가 점수 가져오기
-        console.log('🔵 구성원 평가 점수 로드 시작');
-        console.log('🔵 선택된 구성원 ID (selectedMemberId):', selectedMemberId);
-        console.log('🔵 전체 구성원 정보:', members.find(m => m.id === selectedMemberId));
-        
         const memberRatings = await getMemberRatings(selectedMemberId);
         
         if (memberRatings && memberRatings.length > 0) {
-          console.log('✅ API에서 받은 평가 점수:', memberRatings);
-          console.log('📋 평가 항목 템플릿:', ratingsTemplate);
-          
           // ratingsTemplate과 API 응답 데이터를 매칭
           const mergedItems = ratingsTemplate.map(templateItem => {
-            console.log(`🔍 매칭 시도 - 항목 ID: ${templateItem.id}, 항목명: ${templateItem.name}`);
-            
-            // iteminfo가 templateItem.id와 일치하는 데이터 찾기
             const matchedRating = memberRatings.find(
-              rating => {
-                const match = String(rating.iteminfo) === String(templateItem.id);
-                console.log(`  비교: rating.iteminfo(${rating.iteminfo}) === templateItem.id(${templateItem.id}) => ${match}`);
-                return match;
-              }
+              rating => String(rating.iteminfo) === String(templateItem.id)
             );
             
             if (matchedRating) {
-              console.log(`  ✅ 매칭 성공!`, {
-                iteminfo: matchedRating.iteminfo,
-                score: matchedRating.score,
-                plus: matchedRating.plus,
-                comment: matchedRating.comment
-              });
               return {
                 ...templateItem,
                 score: parseInt(matchedRating.score) || 0,
@@ -179,8 +154,6 @@ function EvaluationPage() {
                 comment: matchedRating.comment || ''
               };
             } else {
-              console.log(`  ❌ 매칭 실패 - 기본값 사용`);
-              // 매칭되는 데이터가 없으면 기본값
               return {
                 ...templateItem,
                 score: 0,
@@ -190,12 +163,11 @@ function EvaluationPage() {
             }
           });
           
-          console.log('✅ 최종 매칭된 평가 데이터:', mergedItems);
           setEvaluationItems(mergedItems);
           return;
         }
       } catch (error) {
-        console.error('❌ 평가 점수 로드 실패, localStorage 또는 기본값 사용:', error);
+        // API 실패 시 localStorage에서 시도
       }
 
       // API 실패 시 localStorage에서 시도
@@ -274,21 +246,31 @@ function EvaluationPage() {
 
     try {
       const selectedMember = members.find(m => m.id === selectedMemberId);
+      const totalScore = getTotalScore();
+      
+      // 백엔드 API 형식으로 데이터 변환
+      const ratings = evaluationItems.map(item => ({
+        itemInfo: String(item.id),
+        plus: String(item.bonus),
+        score: String(item.score),
+        userInfo: selectedMemberId,
+        comment: item.comment || ''
+      }));
+      
+      // 백엔드 API 호출
+      await saveUserRatings(String(totalScore.toFixed(2)), ratings);
+      
+      // 성공 시 로컬 스토리지에도 저장
       const evaluationData = {
         projectId: currentProjectId,
         projectName: currentProject?.name,
         memberId: selectedMemberId,
         memberName: selectedMember?.username,
         items: evaluationItems,
-        totalScore: getTotalScore(),
+        totalScore: totalScore,
         evaluatedAt: new Date().toISOString()
       };
-
-      // 프로젝트 및 구성원별로 로컬 스토리지에 저장
       localStorage.setItem(`evaluationData-${currentProjectId}-${selectedMemberId}`, JSON.stringify(evaluationData));
-
-      // API 호출 (선택적)
-      await saveEvaluation(evaluationData);
       
       setSaveMessage({ text: '평가가 성공적으로 저장되었습니다!', type: 'success' });
     } catch (error) {
@@ -300,7 +282,6 @@ function EvaluationPage() {
 
   const totalScore = getTotalScore();
   const totalRatio = getTotalRatio();
-  const selectedMember = members.find(m => m.id === selectedMemberId);
 
   return (
     <Box>
@@ -320,17 +301,17 @@ function EvaluationPage() {
             <Typography variant="body1" sx={{ minWidth: 100 }}>
               프로젝트:
             </Typography>
-            <FormControl sx={{ minWidth: 300 }}>
+            <FormControl sx={{ minWidth: 400, flexGrow: 1 }}>
               <Select
                 value={currentProjectId || ''}
-                onChange={(e) => selectProject(e.target.value)}
+                onChange={(e) => setCurrentProjectId(e.target.value)}
                 displayEmpty
                 sx={{ bgcolor: 'white' }}
               >
                 <MenuItem value="" disabled>
                   프로젝트를 선택하세요
                 </MenuItem>
-                {projects.map((project) => (
+                {DUMMY_PROJECTS.map((project) => (
                   <MenuItem key={project.id} value={project.id}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <FolderOpenIcon sx={{ color: 'primary.main' }} />
@@ -352,7 +333,7 @@ function EvaluationPage() {
             <Typography variant="body1" sx={{ minWidth: 100 }}>
               구성원:
             </Typography>
-            <FormControl sx={{ minWidth: 300 }}>
+            <FormControl sx={{ minWidth: 400, flexGrow: 1 }}>
               <Select
                 value={selectedMemberId}
                 onChange={(e) => setSelectedMemberId(e.target.value)}
@@ -363,36 +344,38 @@ function EvaluationPage() {
                 <MenuItem value="" disabled>
                   구성원을 선택하세요
                 </MenuItem>
-                {members.map((member) => (
-                  <MenuItem key={member.id} value={member.id}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                        {member.username.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body1">{member.username}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {member.team}
-                        </Typography>
+                {members.map((member) => {
+                  // 평가 완료 여부 확인
+                  const hasEvaluation = localStorage.getItem(`evaluationData-${currentProjectId}-${member.id}`) !== null;
+                  
+                  return (
+                    <MenuItem key={member.id} value={member.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                            {member.username.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body1">{member.username}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {member.team}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        {hasEvaluation && (
+                          <Chip 
+                            label="평가 완료" 
+                            size="small" 
+                            color="success" 
+                            sx={{ fontWeight: 'bold' }}
+                          />
+                        )}
                       </Box>
-                    </Box>
-                  </MenuItem>
-                ))}
+                    </MenuItem>
+                  );
+                })}
               </Select>
             </FormControl>
-            {selectedMember && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ width: 48, height: 48, bgcolor: 'primary.main', fontSize: 20 }}>
-                  {selectedMember.username.charAt(0)}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6">{selectedMember.username}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedMember.team}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
           </Box>
         </Box>
 
@@ -459,8 +442,15 @@ function EvaluationPage() {
                 return (
                   <TableRow key={item.id} hover>
                     <TableCell>
-                      <Tooltip title={item.description || ''} arrow>
-                        <Typography sx={{ fontWeight: 'bold', cursor: 'pointer' }}>
+                      <Tooltip title={item.description || ''} arrow placement="left">
+                        <Typography 
+                          component="span"
+                          sx={{ 
+                            fontWeight: 'bold', 
+                            cursor: 'pointer',
+                            display: 'inline-block'
+                          }}
+                        >
                           {item.name}
                         </Typography>
                       </Tooltip>

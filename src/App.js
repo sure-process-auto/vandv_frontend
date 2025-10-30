@@ -12,11 +12,11 @@ function App() {
     <ProjectProvider>
       <BrowserRouter>
         <Routes>
-          {/* 로그인 페이지 (레이아웃 없음) */}
-          <Route path="/login" element={<Login />} />
+          {/* 최초 진입 - 로그인 페이지 (레이아웃 없음) */}
+          <Route path="/" element={<Login />} />
           
           {/* 레이아웃이 있는 페이지들 */}
-          <Route path="/" element={<Layout><EvaluationPage /></Layout>} />
+          <Route path="/evaluation" element={<Layout><EvaluationPage /></Layout>} />
           <Route path="/result" element={<Layout><ResultPage /></Layout>} />
           <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
         </Routes>

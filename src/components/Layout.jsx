@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
@@ -17,6 +17,8 @@ import {
 } from '@mui/material';
 import { 
   Settings as SettingsIcon, 
+  Assignment as AssignmentIcon,
+  Analytics as AnalyticsIcon,
   Assessment as AssessmentIcon,
   Logout as LogoutIcon 
 } from '@mui/icons-material';
@@ -124,16 +126,29 @@ const theme = createTheme({
 function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [userRole, setUserRole] = useState('');
 
-  const menuItems = [
-    { id: 'evaluation', label: '평가', icon: <AssessmentIcon />, path: '/' },
-    { id: 'result', label: '결과', icon: <AssessmentIcon />, path: '/result' },
-    { id: 'settings', label: '설정', icon: <SettingsIcon />, path: '/settings' },
+  // 사용자 역할 가져오기
+  useEffect(() => {
+    const role = localStorage.getItem('userRole') || '';
+    setUserRole(role);
+  }, []);
+
+  // 전체 메뉴 항목 정의
+  const allMenuItems = [
+    { id: 'evaluation', label: '평가', icon: <AssignmentIcon />, path: '/evaluation', roles: ['pm'] },
+    { id: 'result', label: '결과', icon: <AnalyticsIcon />, path: '/result', roles: ['user'] },
+    { id: 'settings', label: '설정', icon: <SettingsIcon />, path: '/settings', roles: ['pm'] },
   ];
 
+  // 사용자 역할에 따라 메뉴 필터링
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+
   const handleLogout = () => {
-    // 로그아웃 로직
-    navigate('/login');
+    // 로그아웃 시 사용자 정보 삭제
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    navigate('/');
   };
 
   return (
@@ -158,10 +173,17 @@ function Layout({ children }) {
           }}
         >
           <Toolbar>
-            <AssessmentIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', letterSpacing: 1, color: 'text.primary' }}>
-              Sure Score
-            </Typography>
+            <Box
+              component="img"
+              src="/logo-horizontal.png"
+              alt="Sure Score Logo"
+              sx={{ 
+                height: 60,
+                width: 'auto',
+                mr: 2,
+                objectFit: 'contain'
+              }}
+            />
           </Toolbar>
         </AppBar>
 
@@ -221,7 +243,6 @@ function Layout({ children }) {
                 </ListItem>
               ))}
             </List>
-            <Divider sx={{ borderColor: 'rgba(91, 155, 213, 0.3)' }} />
             
             {/* 로그아웃 버튼 (하단) */}
             <Box sx={{ marginTop: 'auto' }}>

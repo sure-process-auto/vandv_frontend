@@ -29,17 +29,43 @@ export const ProjectProvider = ({ children }) => {
         setCurrentProjectId(parsedProjects[0].id);
       }
     } else {
-      // 기본 프로젝트 생성
-      const defaultProject = {
-        id: 'default-project',
-        name: '기본 프로젝트',
-        description: '첫 번째 프로젝트',
-        createdAt: new Date().toISOString()
-      };
-      setProjects([defaultProject]);
-      setCurrentProjectId(defaultProject.id);
-      localStorage.setItem('projects', JSON.stringify([defaultProject]));
-      localStorage.setItem('currentProjectId', defaultProject.id);
+      // 기본 더미 프로젝트 생성
+      const defaultProjects = [
+        {
+          id: 'project-001',
+          name: '모바일 앱 리뉴얼',
+          description: 'iOS/Android 모바일 앱 UI/UX 개선 프로젝트',
+          createdAt: '2025-01-15T09:00:00.000Z'
+        },
+        {
+          id: 'project-002',
+          name: 'ERP 시스템 구축',
+          description: '사내 전사적 자원 관리 시스템 개발',
+          createdAt: '2025-02-01T09:00:00.000Z'
+        },
+        {
+          id: 'project-003',
+          name: 'AI 챗봇 서비스',
+          description: '고객 상담 자동화를 위한 AI 챗봇 구현',
+          createdAt: '2025-03-10T09:00:00.000Z'
+        },
+        {
+          id: 'project-004',
+          name: '데이터 분석 플랫폼',
+          description: '빅데이터 수집 및 분석 대시보드 구축',
+          createdAt: '2025-04-05T09:00:00.000Z'
+        },
+        {
+          id: 'project-005',
+          name: '클라우드 마이그레이션',
+          description: '온프레미스에서 AWS 클라우드 전환 프로젝트',
+          createdAt: '2025-05-20T09:00:00.000Z'
+        }
+      ];
+      setProjects(defaultProjects);
+      setCurrentProjectId(defaultProjects[0].id);
+      localStorage.setItem('projects', JSON.stringify(defaultProjects));
+      localStorage.setItem('currentProjectId', defaultProjects[0].id);
     }
   }, []);
 

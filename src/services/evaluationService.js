@@ -42,6 +42,36 @@ export const saveEvaluation = async (evaluationData) => {
 };
 
 /**
+ * 사용자 평가 점수 저장
+ * @param {string} totalScore - 총점
+ * @param {Array} ratings - 평가 항목 리스트 (List<Map<String, String>>)
+ * - itemInfo: 평가 항목 ID
+ * - plus: 가산점
+ * - score: 점수
+ * - userInfo: 사용자 ID
+ * - comment: 의견
+ * @returns {Promise<Boolean>} 저장 성공 여부
+ */
+export const saveUserRatings = async (totalScore, ratings) => {
+  try {
+    const response = await apiClient.post('/saveUserRatings', ratings, {
+      params: {
+        totalScore: totalScore
+      }
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(`서버 오류 (${error.response.status}): ${JSON.stringify(error.response.data)}`);
+    }
+    if (error.request) {
+      throw new Error('백엔드 서버에 연결할 수 없습니다.');
+    }
+    throw error;
+  }
+};
+
+/**
  * 평가 목록 조회
  * @returns {Promise<Array>} 평가 목록
  */
@@ -240,43 +270,20 @@ export const getAllTeamMembers = async () => {
 export const getRatingItems = async () => {
   try {
     const url = `/getRatingItems/${PM_ID}`;
-    console.log('🔵 API 호출 (평가 항목):', url);
-    console.log('🔵 전체 URL:', `${API_BASE_URL}${url}`);
-    
     const response = await apiClient.get(url);
-    
-    console.log('📡 Response status:', response.status);
-    console.log('✅ 받은 항목 데이터:', response.data);
-    console.log('✅ 데이터 타입:', Array.isArray(response.data) ? 'Array' : typeof response.data);
-    console.log('✅ 항목 개수:', response.data?.length || 0);
-    
-    // List<Map<String,String>> 형태의 데이터를 반환 (name, ratio 포함)
     return response.data || [];
   } catch (error) {
-    console.error('❌ 평가 항목 API 에러:', error);
-    
     if (error.response) {
-      // 서버가 응답을 반환한 경우
-      console.error('❌ Response status:', error.response.status);
-      console.error('❌ Response data:', error.response.data);
-      
       if (error.response.status === 404) {
-        console.warn('⚠️ 평가 항목을 찾을 수 없습니다. (404)');
         return [];
       }
       throw new Error(`서버 오류: ${error.response.status}`);
     }
     
     if (error.request) {
-      // 요청은 보냈지만 응답을 받지 못한 경우
-      console.error('🔴 백엔드 서버에 연결할 수 없습니다. 기본 항목을 사용합니다.');
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Error message:', error.message);
       return [];
     }
     
-    // 기타 에러
-    console.error('❌ 에러 메시지:', error.message);
     throw error;
   }
 };

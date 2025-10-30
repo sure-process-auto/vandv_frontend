@@ -19,35 +19,68 @@ import {
   Select,
   MenuItem,
   FormControl,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
 } from '@mui/icons-material';
-import { useProject } from '../contexts/ProjectContext.jsx';
 import { getRatingItems } from '../services/evaluationService';
 
+// 더미 프로젝트 데이터
+const DUMMY_PROJECTS = [
+  {
+    id: 'project-001',
+    name: '모바일 앱 리뉴얼',
+    description: 'iOS/Android 모바일 앱 UI/UX 개선 프로젝트',
+    createdAt: '2025-01-15T09:00:00.000Z'
+  },
+  {
+    id: 'project-002',
+    name: 'ERP 시스템 구축',
+    description: '사내 전사적 자원 관리 시스템 개발',
+    createdAt: '2025-02-01T09:00:00.000Z'
+  },
+  {
+    id: 'project-003',
+    name: 'AI 챗봇 서비스',
+    description: '고객 상담 자동화를 위한 AI 챗봇 구현',
+    createdAt: '2025-03-10T09:00:00.000Z'
+  },
+  {
+    id: 'project-004',
+    name: '데이터 분석 플랫폼',
+    description: '빅데이터 수집 및 분석 대시보드 구축',
+    createdAt: '2025-04-05T09:00:00.000Z'
+  },
+  {
+    id: 'project-005',
+    name: '클라우드 마이그레이션',
+    description: '온프레미스에서 AWS 클라우드 전환 프로젝트',
+    createdAt: '2025-05-20T09:00:00.000Z'
+  }
+];
+
 function SettingsPage() {
-  const { projects, currentProjectId, currentProject, selectProject } = useProject();
+  const [currentProjectId, setCurrentProjectId] = useState(DUMMY_PROJECTS[0].id);
   
   // 평가 항목 상태
-  const [evaluationItems, setEvaluationItems] = useState([
-    { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-    { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-    { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-    { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-    { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-  ]);
+  const [evaluationItems, setEvaluationItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [newItem, setNewItem] = useState({ name: '', ratio: 0, description: '' });
   const [openModal, setOpenModal] = useState(false);
+  
+  // 현재 프로젝트 정보
+  const currentProject = DUMMY_PROJECTS.find(p => p.id === currentProjectId);
   
   // 프로젝트별 평가 항목 로드
   useEffect(() => {
     if (!currentProjectId) return;
     
     const loadRatings = async () => {
+      setIsLoading(true);
       try {
         // API에서 평가 항목 가져오기
         const ratingsData = await getRatingItems();
@@ -61,28 +94,20 @@ function SettingsPage() {
             description: item.description || '' // description이 있으면 사용
           }));
           
-          console.log('✅ API에서 불러온 평가 항목 (실제 ID 포함):', formattedItems);
           setEvaluationItems(formattedItems);
+          setIsLoading(false);
           return;
         }
       } catch (error) {
-        console.error('평가 항목 로드 실패, localStorage에서 시도:', error);
+        // API 실패 시 localStorage에서 시도
       }
       
       // API 실패 시 localStorage에서 로드
       const savedSettings = localStorage.getItem(`evaluationSettings-${currentProjectId}`);
       if (savedSettings) {
         setEvaluationItems(JSON.parse(savedSettings));
-      } else {
-        // 기본 항목
-        setEvaluationItems([
-          { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-          { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-          { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-          { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-          { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-        ]);
       }
+      setIsLoading(false);
     };
     
     loadRatings();
@@ -105,7 +130,8 @@ function SettingsPage() {
       return;
     }
 
-    const newId = Math.max(...evaluationItems.map(item => item.id), 0) + 1;
+    // 고유한 문자열 ID 생성 (타임스탬프 + 랜덤)
+    const newId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setEvaluationItems([
       ...evaluationItems,
       { ...newItem, id: newId, ratio: parseFloat(newItem.ratio) || 0 }
@@ -115,7 +141,7 @@ function SettingsPage() {
 
   // 항목 삭제
   const handleDeleteItem = (id) => {
-    setEvaluationItems(evaluationItems.filter(item => item.id !== id));
+    setEvaluationItems(evaluationItems.filter(item => String(item.id) !== String(id)));
   };
 
   // 항목 수정
@@ -125,13 +151,13 @@ function SettingsPage() {
       const numValue = value === '' ? 0 : parseFloat(value) || 0;
       setEvaluationItems(items =>
         items.map(item =>
-          item.id === id ? { ...item, [field]: numValue } : item
+          String(item.id) === String(id) ? { ...item, [field]: numValue } : item
         )
       );
     } else {
       setEvaluationItems(items =>
         items.map(item =>
-          item.id === id ? { ...item, [field]: value } : item
+          String(item.id) === String(id) ? { ...item, [field]: value } : item
         )
       );
     }
@@ -167,6 +193,24 @@ function SettingsPage() {
           평가 항목 설정
         </Typography>
 
+        {isLoading ? (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '400px',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
+            <CircularProgress size={60} />
+            <Typography variant="body1" color="text.secondary">
+              평가 항목을 불러오는 중...
+            </Typography>
+          </Box>
+        ) : (
+        <>
         {/* 평가 항목 설정 섹션 */}
         <Box>
           {/* 프로젝트 선택 */}
@@ -177,15 +221,10 @@ function SettingsPage() {
             <FormControl sx={{ minWidth: 300 }}>
               <Select
                 value={currentProjectId || ''}
-                onChange={(e) => selectProject(e.target.value)}
+                onChange={(e) => setCurrentProjectId(e.target.value)}
                 displayEmpty
               >
-                {projects.length === 0 && (
-                  <MenuItem value="" disabled>
-                    프로젝트가 없습니다
-                  </MenuItem>
-                )}
-                {projects.map((project) => (
+                {DUMMY_PROJECTS.map((project) => (
                   <MenuItem key={project.id} value={project.id}>
                     {project.name}
                   </MenuItem>
@@ -202,7 +241,7 @@ function SettingsPage() {
           </Box>
 
           {/* 항목 추가 버튼 */}
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end', mt: '-77px' }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -343,6 +382,8 @@ function SettingsPage() {
             </Button>
           </Box>
         </Box>
+        </>
+        )}
       </Paper>
     </Box>
   );

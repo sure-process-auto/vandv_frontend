@@ -42,14 +42,8 @@ function ResultPage() {
   const [interviewRequest, setInterviewRequest] = useState({ date: '', time: '', message: '' });
   const [submitMessage, setSubmitMessage] = useState({ text: '', type: '' });
 
-  // 임시 구성원 데이터 (하드코딩)
-  const [members] = useState([
-    { id: 'member-1', username: '김철수', team: '백엔드팀' },
-    { id: 'member-2', username: '이영희', team: '프론트엔드팀' },
-    { id: 'member-3', username: '박지훈', team: '풀스택팀' },
-    { id: 'member-4', username: '최민수', team: 'DevOps팀' },
-    { id: 'member-5', username: '정수진', team: 'UI/UX팀' },
-  ]);
+  // 구성원 데이터 (API에서 로드)
+  const [members] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState('');
   
   // 평가 항목 템플릿 (API에서 로드)
@@ -69,28 +63,11 @@ function ResultPage() {
             description: item.description || ''
           }));
           
-          console.log('✅ API에서 불러온 평가 항목 템플릿 (결과 페이지, 실제 ID 포함):', formattedItems);
           setRatingsTemplate(formattedItems);
-        } else {
-          // 기본 항목
-          setRatingsTemplate([
-            { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-            { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-            { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-            { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-            { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-          ]);
         }
       } catch (error) {
-        console.error('평가 항목 로드 실패:', error);
-        // 기본 항목
-        setRatingsTemplate([
-          { id: 1, name: '코드 품질', ratio: 30, description: '코드의 가독성, 구조, 표준 준수' },
-          { id: 2, name: '기능 완성도', ratio: 25, description: '요구사항 충족도 및 기능 완성도' },
-          { id: 3, name: '사용자 경험', ratio: 20, description: 'UI/UX 품질 및 사용 편의성' },
-          { id: 4, name: '성능 최적화', ratio: 15, description: '실행 속도 및 리소스 효율성' },
-          { id: 5, name: '문서화', ratio: 10, description: '주석, README, 기술 문서 품질' }
-        ]);
+        // 에러 시 빈 배열
+        setRatingsTemplate([]);
       }
     };
 
