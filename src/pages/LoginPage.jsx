@@ -13,15 +13,17 @@ const LoginPage = () => {
 		e.preventDefault();
 		// 로그인 처리 로직 (예시)
 		if (username === 'pm' && password === PW) {
-			// PM 역할 저장
+			// PM 역할 및 PM_ID 저장
 			localStorage.setItem('userRole', 'pm');
 			localStorage.setItem('username', username);
+			localStorage.setItem('PM_ID', '4g9b2e7f1c8a0d6h3k5j');
 			navigate('/evaluation');
 		} else if (username === 'pm2' && password === PW) {
-			// 일반 사용자 역할 저장
-			localStorage.setItem('userRole', 'user');
+			// PM2 역할 및 PM_ID 저장
+			localStorage.setItem('userRole', 'pm');
 			localStorage.setItem('username', username);
-			navigate('/result');
+			localStorage.setItem('PM_ID', 'e9k2f0b7d5c1h3a6g8j');
+			navigate('/evaluation');
 		} else if (username === 'user' && password === PW) {
 			// 일반 사용자 역할 저장
 			localStorage.setItem('userRole', 'user');

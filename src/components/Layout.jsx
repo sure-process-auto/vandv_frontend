@@ -148,6 +148,7 @@ function Layout({ children }) {
     // 로그아웃 시 사용자 정보 삭제
     localStorage.removeItem('userRole');
     localStorage.removeItem('username');
+    localStorage.removeItem('PM_ID');
     navigate('/');
   };
 
@@ -172,7 +173,10 @@ function Layout({ children }) {
             boxShadow: 'none',
           }}
         >
-          <Toolbar>
+          <Toolbar
+          sx={{
+            p: 'unset!important',
+          }}>
             <Box
               component="img"
               src="/logo-horizontal.png"

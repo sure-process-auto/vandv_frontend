@@ -22,6 +22,7 @@ import {
   MenuItem,
   FormControl,
   Avatar,
+  Snackbar,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -67,7 +68,13 @@ function EvaluationPage() {
   const [currentProjectId, setCurrentProjectId] = useState(DUMMY_PROJECTS[0].id);
   const [evaluationItems, setEvaluationItems] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+  
+  // Snackbar 상태
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' // 'success', 'error', 'warning', 'info'
+  });
   
   // 구성원 데이터 (API에서 로드)
   const [members, setMembers] = useState([]);
@@ -75,6 +82,18 @@ function EvaluationPage() {
   
   // 평가 항목 템플릿 (API에서 로드)
   const [ratingsTemplate, setRatingsTemplate] = useState([]);
+
+  // Snackbar 핸들러
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   // 구성원 데이터 및 평가 항목 로드
   useEffect(() => {
@@ -222,27 +241,23 @@ function EvaluationPage() {
   // 저장 핸들러
   const handleSave = async () => {
     if (!currentProjectId) {
-      setSaveMessage({ text: '프로젝트가 선택되지 않았습니다.', type: 'error' });
+      showSnackbar('프로젝트가 선택되지 않았습니다.', 'error');
       return;
     }
 
     if (!selectedMemberId) {
-      setSaveMessage({ text: '구성원을 선택해주세요.', type: 'error' });
+      showSnackbar('구성원을 선택해주세요.', 'error');
       return;
     }
 
     // 비율 합계 검증
     const totalRatio = getTotalRatio();
     if (totalRatio !== 100) {
-      setSaveMessage({ 
-        text: `비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`, 
-        type: 'error' 
-      });
+      showSnackbar(`비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`, 'error');
       return;
     }
 
     setIsSaving(true);
-    setSaveMessage({ text: '', type: '' });
 
     try {
       const selectedMember = members.find(m => m.id === selectedMemberId);
@@ -272,9 +287,9 @@ function EvaluationPage() {
       };
       localStorage.setItem(`evaluationData-${currentProjectId}-${selectedMemberId}`, JSON.stringify(evaluationData));
       
-      setSaveMessage({ text: '평가가 성공적으로 저장되었습니다!', type: 'success' });
+      showSnackbar('평가가 성공적으로 저장되었습니다!', 'success');
     } catch (error) {
-      setSaveMessage({ text: `저장 실패: ${error.message}`, type: 'error' });
+      showSnackbar(`저장 실패: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -532,15 +547,27 @@ function EvaluationPage() {
             {isSaving ? '저장 중...' : '평가 저장'}
           </Button>
 
-          {saveMessage.text && (
-            <Alert severity={saveMessage.type} sx={{ width: '100%', maxWidth: 600 }}>
-              {saveMessage.text}
-            </Alert>
-          )}
         </Box>
           </Box>
         )}
       </Paper>
+      
+      {/* Snackbar 알림 */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

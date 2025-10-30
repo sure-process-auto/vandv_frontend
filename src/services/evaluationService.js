@@ -4,8 +4,10 @@ import axios from 'axios';
 // package.json의 proxy 설정이 http://172.16.1.36:8080으로 연결
 const API_BASE_URL = '/api';
 
-// PM ID (하드코딩)
-const PM_ID = '4g9b2e7f1c8a0d6h3k5j';
+// PM ID를 localStorage에서 가져오는 함수
+const getPmId = () => {
+  return localStorage.getItem('PM_ID') || '4g9b2e7f1c8a0d6h3k5j';
+};
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -221,7 +223,7 @@ export const submitInterviewRequest = async (interviewData) => {
  */
 export const getAllTeamMembers = async () => {
   try {
-    const url = `/getAllTeamMembers/${PM_ID}`;
+    const url = `/getAllTeamMembers/${getPmId()}`;
     console.log('🔵 API 호출:', url);
     console.log('🔵 전체 URL:', `${API_BASE_URL}${url}`);
     
@@ -269,7 +271,7 @@ export const getAllTeamMembers = async () => {
  */
 export const getRatingItems = async () => {
   try {
-    const url = `/getRatingItems/${PM_ID}`;
+    const url = `/getRatingItems/${getPmId()}`;
     const response = await apiClient.get(url);
     return response.data || [];
   } catch (error) {

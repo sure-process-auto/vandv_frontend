@@ -20,6 +20,8 @@ import {
   MenuItem,
   FormControl,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -72,8 +74,27 @@ function SettingsPage() {
   const [newItem, setNewItem] = useState({ name: '', ratio: 0, description: '' });
   const [openModal, setOpenModal] = useState(false);
   
+  // Snackbar 상태
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' // 'success', 'error', 'warning', 'info'
+  });
+  
   // 현재 프로젝트 정보
   const currentProject = DUMMY_PROJECTS.find(p => p.id === currentProjectId);
+  
+  // Snackbar 핸들러
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
   
   // 프로젝트별 평가 항목 로드
   useEffect(() => {
@@ -126,7 +147,7 @@ function SettingsPage() {
   // 항목 추가
   const handleAddItem = () => {
     if (!newItem.name.trim()) {
-      alert('항목 이름을 입력해주세요.');
+      showSnackbar('항목 이름을 입력해주세요.', 'warning');
       return;
     }
 
@@ -137,6 +158,7 @@ function SettingsPage() {
       { ...newItem, id: newId, ratio: parseFloat(newItem.ratio) || 0 }
     ]);
     handleCloseModal();
+    showSnackbar('항목이 추가되었습니다!', 'success');
   };
 
   // 항목 삭제
@@ -171,19 +193,35 @@ function SettingsPage() {
   // 설정 저장
   const handleSaveSettings = () => {
     if (!currentProjectId) {
-      alert('프로젝트가 선택되지 않았습니다.');
+      showSnackbar('프로젝트가 선택되지 않았습니다.', 'error');
       return;
     }
 
     const totalRatio = getTotalRatio();
     if (totalRatio !== 100) {
-      alert(`비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`);
+      showSnackbar(`비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`, 'warning');
       return;
     }
 
     // 프로젝트별로 localStorage에 저장
     localStorage.setItem(`evaluationSettings-${currentProjectId}`, JSON.stringify(evaluationItems));
-    alert('설정이 저장되었습니다!');
+    
+    // 해당 프로젝트의 모든 평가 완료 데이터 삭제 (평가 항목 변경 시 재평가 필요)
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`evaluationData-${currentProjectId}-`)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    const removedCount = keysToRemove.length;
+    if (removedCount > 0) {
+      showSnackbar(`설정이 저장되었습니다! ${removedCount}개의 완료된 평가가 초기화되었습니다.`, 'success');
+    } else {
+      showSnackbar('설정이 저장되었습니다!', 'success');
+    }
   };
 
   return (
@@ -385,6 +423,23 @@ function SettingsPage() {
         </>
         )}
       </Paper>
+      
+      {/* Snackbar 알림 */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
