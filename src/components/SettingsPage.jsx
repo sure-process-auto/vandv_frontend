@@ -28,7 +28,7 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
 } from '@mui/icons-material';
-import { getRatingItems } from '../services/evaluationService';
+import { getRatingItems, saveRatingItems, getPmId } from '../services/evaluationService';
 
 // 더미 프로젝트 데이터
 const DUMMY_PROJECTS = [
@@ -191,7 +191,7 @@ function SettingsPage() {
   };
 
   // 설정 저장
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     if (!currentProjectId) {
       showSnackbar('프로젝트가 선택되지 않았습니다.', 'error');
       return;
@@ -203,24 +203,39 @@ function SettingsPage() {
       return;
     }
 
-    // 프로젝트별로 localStorage에 저장
-    localStorage.setItem(`evaluationSettings-${currentProjectId}`, JSON.stringify(evaluationItems));
-    
-    // 해당 프로젝트의 모든 평가 완료 데이터 삭제 (평가 항목 변경 시 재평가 필요)
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(`evaluationData-${currentProjectId}-`)) {
-        keysToRemove.push(key);
+    try {
+      // 백엔드 API로 평가 항목 저장
+      const pmId = getPmId();
+      const items = evaluationItems.map(item => ({
+        name: item.name,
+        ratio: String(item.ratio),
+        userinfo: pmId,
+        description: item.description || ''
+      }));
+
+      await saveRatingItems(items);
+
+      // 프로젝트별로 localStorage에 저장
+      localStorage.setItem(`evaluationSettings-${currentProjectId}`, JSON.stringify(evaluationItems));
+      
+      // 해당 프로젝트의 모든 평가 완료 데이터 삭제 (평가 항목 변경 시 재평가 필요)
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`evaluationData-${currentProjectId}-`)) {
+          keysToRemove.push(key);
+        }
       }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    const removedCount = keysToRemove.length;
-    if (removedCount > 0) {
-      showSnackbar(`설정이 저장되었습니다! ${removedCount}개의 완료된 평가가 초기화되었습니다.`, 'success');
-    } else {
-      showSnackbar('설정이 저장되었습니다!', 'success');
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      const removedCount = keysToRemove.length;
+      if (removedCount > 0) {
+        showSnackbar(`설정이 저장되었습니다! ${removedCount}개의 완료된 평가가 초기화되었습니다.`, 'success');
+      } else {
+        showSnackbar('설정이 저장되었습니다!', 'success');
+      }
+    } catch (error) {
+      showSnackbar(`저장 실패: ${error.message}`, 'error');
     }
   };
 

@@ -5,7 +5,7 @@ import axios from 'axios';
 const API_BASE_URL = '/api';
 
 // PM ID를 localStorage에서 가져오는 함수
-const getPmId = () => {
+export const getPmId = () => {
   return localStorage.getItem('PM_ID') || '4g9b2e7f1c8a0d6h3k5j';
 };
 
@@ -134,6 +134,30 @@ export const getRatingItems = async () => {
       return [];
     }
     
+    throw error;
+  }
+};
+
+/**
+ * 평가 항목 저장
+ * @param {Array} items - 평가 항목 리스트 (List<Map<String, String>>)
+ * - name: 항목 이름
+ * - ratio: 비율
+ * - userInfo: PM ID
+ * - description: 설명
+ * @returns {Promise<Boolean>} 저장 성공 여부
+ */
+export const saveRatingItems = async (items) => {
+  try {
+    const response = await apiClient.post('/saveRatingItems', items);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(`서버 오류 (${error.response.status}): ${JSON.stringify(error.response.data)}`);
+    }
+    if (error.request) {
+      throw new Error('백엔드 서버에 연결할 수 없습니다.');
+    }
     throw error;
   }
 };
