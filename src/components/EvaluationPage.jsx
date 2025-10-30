@@ -1,18 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Card,
+  CardContent,
+  Grid,
+  Alert,
+  CircularProgress,
+  Chip,
+  Tooltip,
+} from '@mui/material';
+import {
+  Save as SaveIcon,
+  CheckCircle as CheckCircleIcon,
+  Warning as WarningIcon,
+} from '@mui/icons-material';
 import { saveEvaluation } from '../services/evaluationService';
-import './EvaluationPage.css';
 
 function EvaluationPage() {
-  const [evaluationItems, setEvaluationItems] = useState([
-    { id: 1, name: '코드 품질', ratio: 30, score: 0, bonus: 0 },
-    { id: 2, name: '기능 완성도', ratio: 25, score: 0, bonus: 0 },
-    { id: 3, name: '사용자 경험', ratio: 20, score: 0, bonus: 0 },
-    { id: 4, name: '성능 최적화', ratio: 15, score: 0, bonus: 0 },
-    { id: 5, name: '문서화', ratio: 10, score: 0, bonus: 0 }
-  ]);
-
+  const [evaluationItems, setEvaluationItems] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+
+  // 설정에서 평가 항목 불러오기
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('evaluationSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setEvaluationItems(settings.map(item => ({
+        ...item,
+        score: 0,
+        bonus: 0
+      })));
+    } else {
+      // 기본 항목
+      setEvaluationItems([
+        { id: 1, name: '코드 품질', ratio: 30, score: 0, bonus: 0, description: '코드의 가독성, 구조, 표준 준수' },
+        { id: 2, name: '기능 완성도', ratio: 25, score: 0, bonus: 0, description: '요구사항 충족도 및 기능 완성도' },
+        { id: 3, name: '사용자 경험', ratio: 20, score: 0, bonus: 0, description: 'UI/UX 품질 및 사용 편의성' },
+        { id: 4, name: '성능 최적화', ratio: 15, score: 0, bonus: 0, description: '실행 속도 및 리소스 효율성' },
+        { id: 5, name: '문서화', ratio: 10, score: 0, bonus: 0, description: '주석, README, 기술 문서 품질' }
+      ]);
+    }
+  }, []);
 
   // 항목 값 변경 핸들러
   const handleChange = (id, field, value) => {
@@ -41,12 +80,15 @@ function EvaluationPage() {
     // 비율 합계 검증
     const totalRatio = getTotalRatio();
     if (totalRatio !== 100) {
-      setSaveMessage(`⚠️ 비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`);
+      setSaveMessage({ 
+        text: `비율의 합계는 100%여야 합니다. (현재: ${totalRatio}%)`, 
+        type: 'error' 
+      });
       return;
     }
 
     setIsSaving(true);
-    setSaveMessage('');
+    setSaveMessage({ text: '', type: '' });
 
     try {
       const evaluationData = {
@@ -56,109 +98,154 @@ function EvaluationPage() {
       };
 
       await saveEvaluation(evaluationData);
-      setSaveMessage('✅ 평가가 성공적으로 저장되었습니다!');
+      setSaveMessage({ text: '평가가 성공적으로 저장되었습니다!', type: 'success' });
     } catch (error) {
-      setSaveMessage(`❌ 저장 실패: ${error.message}`);
+      setSaveMessage({ text: `저장 실패: ${error.message}`, type: 'error' });
     } finally {
       setIsSaving(false);
     }
   };
 
-  return (
-    <div className="evaluation-page">
-      <div className="evaluation-container">
-        <h1>평가 시스템</h1>
-        
-        <div className="evaluation-summary">
-          <div className="summary-item">
-            <span className="summary-label">총 비율:</span>
-            <span className={`summary-value ${getTotalRatio() === 100 ? 'valid' : 'invalid'}`}>
-              {getTotalRatio()}%
-            </span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">총 점수:</span>
-            <span className="summary-value">{getTotalScore().toFixed(2)}점</span>
-          </div>
-        </div>
+  const totalScore = getTotalScore();
+  const totalRatio = getTotalRatio();
 
-        <div className="table-container">
-          <table className="evaluation-table">
-            <thead>
-              <tr>
-                <th>항목</th>
-                <th>비율 (%)</th>
-                <th>점수 (0-100)</th>
-                <th>가산점</th>
-                <th>가중 점수</th>
-              </tr>
-            </thead>
-            <tbody>
-              {evaluationItems.map(item => {
+  return (
+    <Box>
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
+          평가 시스템
+        </Typography>
+
+        {/* 요약 정보 */}
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: totalRatio === 100 ? 'success.light' : 'error.light' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      총 비율
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+                      {totalRatio}%
+                    </Typography>
+                  </Box>
+                  {totalRatio === 100 ? (
+                    <CheckCircleIcon sx={{ fontSize: 60, color: 'success.dark' }} />
+                  ) : (
+                    <WarningIcon sx={{ fontSize: 60, color: 'error.dark' }} />
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: 'primary.light' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      총 점수
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+                      {totalScore.toFixed(2)}
+                    </Typography>
+                  </Box>
+                  <Chip 
+                    label={totalScore >= 80 ? '우수' : totalScore >= 60 ? '보통' : '미흡'} 
+                    color={totalScore >= 80 ? 'success' : totalScore >= 60 ? 'warning' : 'error'}
+                    sx={{ fontSize: 18, p: 2 }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* 평가 테이블 */}
+        <TableContainer component={Paper} sx={{ mb: 3 }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'primary.main' }}>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>항목</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">비율 (%)</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">점수 (0-100)</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">가산점</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">가중 점수</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {evaluationItems.map((item) => {
                 const weightedScore = (item.score * item.ratio) / 100;
                 const finalScore = weightedScore + item.bonus;
 
                 return (
-                  <tr key={item.id}>
-                    <td className="item-name">{item.name}</td>
-                    <td>
-                      <input
+                  <TableRow key={item.id} hover>
+                    <TableCell>
+                      <Tooltip title={item.description || ''} arrow>
+                        <Typography sx={{ fontWeight: 'bold', cursor: 'pointer' }}>
+                          {item.name}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip label={`${item.ratio}%`} color="primary" variant="outlined" />
+                    </TableCell>
+                    <TableCell align="center">
+                      <TextField
                         type="number"
-                        min="0"
-                        max="100"
-                        value={item.ratio}
-                        onChange={(e) => handleChange(item.id, 'ratio', e.target.value)}
-                        className="input-field"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
                         value={item.score}
                         onChange={(e) => handleChange(item.id, 'score', e.target.value)}
-                        className="input-field"
+                        size="small"
+                        sx={{ width: 100 }}
+                        inputProps={{ min: 0, max: 100 }}
                       />
-                    </td>
-                    <td>
-                      <input
+                    </TableCell>
+                    <TableCell align="center">
+                      <TextField
                         type="number"
                         value={item.bonus}
                         onChange={(e) => handleChange(item.id, 'bonus', e.target.value)}
-                        className="input-field"
+                        size="small"
+                        sx={{ width: 100 }}
                       />
-                    </td>
-                    <td className="weighted-score">{finalScore.toFixed(2)}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip 
+                        label={finalScore.toFixed(2)} 
+                        color="success" 
+                        sx={{ fontWeight: 'bold', minWidth: 80 }}
+                      />
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-        <div className="action-section">
-          <button
+        {/* 저장 버튼 및 메시지 */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
             onClick={handleSave}
             disabled={isSaving}
-            className="save-button"
+            sx={{ minWidth: 200 }}
           >
             {isSaving ? '저장 중...' : '평가 저장'}
-          </button>
-          
-          {saveMessage && (
-            <div className={`save-message ${saveMessage.includes('성공') ? 'success' : 'error'}`}>
-              {saveMessage}
-            </div>
+          </Button>
+
+          {saveMessage.text && (
+            <Alert severity={saveMessage.type} sx={{ width: '100%', maxWidth: 600 }}>
+              {saveMessage.text}
+            </Alert>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Paper>
+    </Box>
   );
 }
 
 export default EvaluationPage;
-
-
-
-
