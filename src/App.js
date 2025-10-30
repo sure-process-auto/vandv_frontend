@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './contexts/ProjectContext.jsx';
 import Layout from './components/Layout.jsx';
 import EvaluationPage from './components/EvaluationPage.jsx';
-import ResultPage from './components/ResultPage.jsx';
+import ResultPage from './components/EmployeeReport.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import Login from './pages/LoginPage.jsx';
 
