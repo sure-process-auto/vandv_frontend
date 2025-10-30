@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
@@ -74,7 +74,7 @@ function Layout({ children }) {
           <Toolbar>
             <AssessmentIcon sx={{ mr: 2, fontSize: 32 }} />
             <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-              평가 시스템
+              내 프로젝트 관리
             </Typography>
           </Toolbar>
         </AppBar>
